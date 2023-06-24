@@ -1,0 +1,19 @@
+{
+  "name": "tinyapp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rebeccaariss/tinyapp.git"
+  },
+  "author": "Rebecca Ariss (@rebeccaariss on GitHub)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rebeccaariss/tinyapp/issues"
+  },
+  "homepage": "https://github.com/rebeccaariss/tinyapp#readme"
+}
