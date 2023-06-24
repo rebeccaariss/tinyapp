@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/rebeccaariss/tinyapp/issues"
   },
-  "homepage": "https://github.com/rebeccaariss/tinyapp#readme"
+  "homepage": "https://github.com/rebeccaariss/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
 }
