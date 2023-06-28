@@ -36,14 +36,14 @@ app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
   const tinyURL = generateRandomString();
   urlDatabase[tinyURL] = req.body.longURL;
-  res.redirect(`/urls/${tinyURL}`);
+  res.redirect(`/u/${tinyURL}`);
 });
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
-app.get("/urls/:id", (req, res) => {
+app.get("/u/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
 });
