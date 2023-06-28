@@ -7,6 +7,18 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+// generateRandomString function implemented based on
+// https://www.programiz.com/javascript/examples/generate-random-strings#:~
+// :text=random()%20method%20is%20used,a%20random%20character%20is%20generated.
+const generateRandomString = function() {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let randomString = "";
+  for (let i = 0; i < 6; i++) {
+    randomString += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return randomString;
+};
+
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 
