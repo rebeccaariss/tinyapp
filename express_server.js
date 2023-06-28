@@ -20,6 +20,7 @@ const generateRandomString = function() {
 };
 
 app.set("view engine", "ejs");
+// Middleware for parsing POST request body to make it human-readable:
 app.use(express.urlencoded({ extended: true }));
 
 // app.get("/", (req, res) => {
@@ -34,6 +35,9 @@ app.get("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
   res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  const tinyURL = generateRandomString();
+  urlDatabase[tinyURL] = req.body.longURL;
+  console.log(urlDatabase);
 });
 
 app.get("/urls/new", (req, res) => {
