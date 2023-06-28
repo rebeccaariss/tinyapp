@@ -49,8 +49,12 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  if (urlDatabase[req.params.id]) {
+    const longURL = urlDatabase[req.params.id];
+    res.redirect(longURL);
+  } else {
+    res.status(404).send("Sorry, we couldn't find the page you're looking for.");
+  }
 });
 
 // app.get("/hello", (req, res) => {
