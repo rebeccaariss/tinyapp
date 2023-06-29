@@ -68,7 +68,13 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/urls/:id/edit", (req, res) => {
-  res.redirect(`/urls/${req.params.id}`)
+  res.redirect(`/urls/${req.params.id}`);
+});
+
+app.post("/login", (req, res) => {
+  const name = req.body.username;
+  res.cookie("username", name);
+  res.redirect("/urls");
 });
 
 app.listen(PORT, () => {
