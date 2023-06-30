@@ -46,15 +46,25 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  const tinyURL = generateRandomString();
-  urlDatabase[tinyURL] = req.body.longURL;
-  res.redirect(`/urls/${tinyURL}`);
+  const userId = req.cookies.user_id;
+  if (!userId) {
+    res.status(401).send("Sorry, only registered users can create short URLs. Please log in or create an account");
+  } else {
+    console.log(req.body); // Log the POST request body to the console
+    const tinyURL = generateRandomString();
+    urlDatabase[tinyURL] = req.body.longURL;
+    res.redirect(`/urls/${tinyURL}`);
+  }
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { user: users[req.cookies.user_id] };
-  res.render("urls_new", templateVars);
+  const userId = req.cookies.user_id;
+  if (!userId) {
+    res.redirect("/login");
+  } else {
+    const templateVars = { user: users[userId] };
+    res.render("urls_new", templateVars);
+  }
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -67,7 +77,7 @@ app.get("/register", (req, res) => {
   if (userId) {
     res.redirect("/urls");
   } else {
-    const templateVars = { user: users[req.cookies.user_id] };
+    const templateVars = { user: users[userId] };
     res.render("urls_registration", templateVars);
   }
 });
@@ -116,7 +126,7 @@ app.get("/login", (req, res) => {
   if (userId) {
     res.redirect("/urls");
   } else {
-    const templateVars = { user: users[req.cookies.user_id] };
+    const templateVars = { user: users[userId] };
     res.render("urls_login", templateVars);
   }
 });
