@@ -67,9 +67,14 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
+// this is the page with the card containing long URL and short URL link (and edit option)
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: users[req.cookies.user_id] };
-  res.render("urls_show", templateVars);
+  if (urlDatabase[req.params.id]) {
+    const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: users[req.cookies.user_id] };
+    res.render("urls_show", templateVars);
+  } else {
+    res.status(404).send("Sorry, we couldn't find the page you're looking for.");
+  }
 });
 
 app.get("/register", (req, res) => {
@@ -98,6 +103,7 @@ app.post("/register", (req, res) => {
   }
 });
 
+// this takes the user to the corresponding long URL
 app.get("/u/:id", (req, res) => {
   if (urlDatabase[req.params.id]) {
     const longURL = urlDatabase[req.params.id];
