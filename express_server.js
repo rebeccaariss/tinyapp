@@ -112,16 +112,32 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  // const email = req.body.email;
-  // const userId = 
-  // update later for email (?):
-  const name = req.body.username;
-  res.cookie("user_id", name);
+  const email = req.body.email;
+  const password = req.body.password;
+  let userId;
+
+  if (!getUserByEmail(email, users)) {
+    res.status(403).send("Sorry, we couldn't find an account associated with this email address.");
+  } else {
+    const user = getUserByEmail(email, users);
+    userId = user.id;
+    if (password !== user.password) {
+      res.status(403).send("Incorrect password: the password entered does not match our records.");
+    }
+  }
+
+  res.cookie("user_id", userId);
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
+  res.redirect("/login");
+});
+
+// trying to access home route results in "Cannot GET" message;
+// redirecting to /urls route to avoid confusion:
+app.get("/", (req, res) => {
   res.redirect("/urls");
 });
 
