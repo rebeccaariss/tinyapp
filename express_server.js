@@ -63,8 +63,13 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = { user: users[req.cookies.user_id] };
-  res.render("urls_registration", templateVars);
+  const userId = req.cookies.user_id;
+  if (userId) {
+    res.redirect("/urls");
+  } else {
+    const templateVars = { user: users[req.cookies.user_id] };
+    res.render("urls_registration", templateVars);
+  }
 });
 
 app.post("/register", (req, res) => {
@@ -76,7 +81,7 @@ app.post("/register", (req, res) => {
     res.status(400).send("It looks like an account with this email address already exists!");
   } else {
     const userRandomID = generateRandomString();
-    users[userRandomID] = { id: userRandomID, email: req.body.email, password: req.body.password };
+    users[userRandomID] = { id: userRandomID, email: email, password: password };
     res.cookie("user_id", userRandomID);
     // console.log(users[userRandomID]);
     res.redirect("/urls");
@@ -107,8 +112,13 @@ app.post("/urls/:id/edit", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  const templateVars = { user: users[req.cookies.user_id] };
-  res.render("urls_login", templateVars);
+  const userId = req.cookies.user_id;
+  if (userId) {
+    res.redirect("/urls");
+  } else {
+    const templateVars = { user: users[req.cookies.user_id] };
+    res.render("urls_login", templateVars);
+  }
 });
 
 app.post("/login", (req, res) => {
