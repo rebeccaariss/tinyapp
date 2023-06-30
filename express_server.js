@@ -23,6 +23,17 @@ const generateRandomString = function() {
   return randomString;
 };
 
+const getUserByEmail = function(email, users) {
+  let userObj;
+  // we don't need to know the user_id to access values here:
+  for (const id in users) {
+    if (users[id].email === email) {
+      userObj = users[id];
+    }
+  }
+  return userObj;
+};
+
 app.set("view engine", "ejs");
 // Middleware for parsing POST request body to make it human-readable:
 app.use(express.urlencoded({ extended: true }));
@@ -57,11 +68,19 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  const userRandomID = generateRandomString();
-  users[userRandomID] = { id: userRandomID, email: req.body.email, password: req.body.password };
-  res.cookie("user_id", userRandomID);
-  // console.log(users[userRandomID]);
-  res.redirect("/urls");
+  const email = req.body.email;
+  const password = req.body.password;
+  if (!email || !password) {
+    res.status(400).send("Please enter a valid email and password.");
+  } else if (getUserByEmail(email, users)) {
+    res.status(400).send("It looks like an account with this email address already exists!");
+  } else {
+    const userRandomID = generateRandomString();
+    users[userRandomID] = { id: userRandomID, email: req.body.email, password: req.body.password };
+    res.cookie("user_id", userRandomID);
+    // console.log(users[userRandomID]);
+    res.redirect("/urls");
+  }
 });
 
 app.get("/u/:id", (req, res) => {
