@@ -106,6 +106,11 @@ app.post("/urls/:id/edit", (req, res) => {
   res.redirect(`/urls/${req.params.id}`);
 });
 
+app.get("/login", (req, res) => {
+  const templateVars = { user: users[req.cookies.user_id] };
+  res.render("urls_login", templateVars);
+});
+
 app.post("/login", (req, res) => {
   // const email = req.body.email;
   // const userId = 

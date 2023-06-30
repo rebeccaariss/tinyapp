@@ -35,24 +35,29 @@
           </div>
         </form>
       <% } else { %>
-        <form class="form-inline" action="/login" method="POST">
-          <input
-            class="form-control"
-            type="text"
-            name="username"
-            placeholder="Username"
-            style="width: 300px; margin: 1em"
-          />
-          <button 
-            type="submit" 
-            class="btn btn-primary" 
-            style="background-color: #28a745; 
-            color: rgb(54, 54, 54); 
-            border-color: rgb(54, 54, 54);">
-            Log In
-          </button>
-          <% } %>
-        </form>
+        <div class="form-group form-inline">
+          <form class="form-inline" action="/register" method="GET">
+            <button 
+              type="submit" 
+              class="btn btn-primary" 
+              style="background-color: #28a745; 
+              color: rgb(54, 54, 54); 
+              border-color: rgb(54, 54, 54);">
+              Register
+            </button>
+          </form>
+          <form class="form-inline" action="/login" method="GET">
+            <button 
+              type="submit" 
+              class="btn btn-primary" 
+              style="background-color: #28a745; 
+              color: rgb(54, 54, 54); 
+              border-color: rgb(54, 54, 54);">
+              Log In
+            </button>
+          </form>
+        </div>
+      <% } %>
       </div>
   </nav>
 </header>
