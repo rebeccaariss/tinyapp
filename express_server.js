@@ -9,6 +9,8 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = {};
+
 // generateRandomString function implemented based on
 // https://www.programiz.com/javascript/examples/generate-random-strings#:~
 // :text=random()%20method%20is%20used,a%20random%20character%20is%20generated.
@@ -26,7 +28,9 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  const templateVars = { urls: urlDatabase, user: users[req.cookies.user_id]};
+  // console.log(req.cookies.user_id);
+  // console.log(templateVars);
   res.render("urls_index", templateVars);
 });
 
@@ -38,18 +42,26 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies["username"] };
+  const templateVars = { user: users[req.cookies.user_id] };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], username: req.cookies["username"] };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: users[req.cookies.user_id] };
   res.render("urls_show", templateVars);
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = { username: req.cookies["username"] };
+  const templateVars = { user: users[req.cookies.user_id] };
   res.render("urls_registration", templateVars);
+});
+
+app.post("/register", (req, res) => {
+  const userRandomID = generateRandomString();
+  users[userRandomID] = { id: userRandomID, email: req.body.email, password: req.body.password };
+  res.cookie("user_id", userRandomID);
+  // console.log(users[userRandomID]);
+  res.redirect("/urls");
 });
 
 app.get("/u/:id", (req, res) => {
@@ -76,13 +88,16 @@ app.post("/urls/:id/edit", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
+  // const email = req.body.email;
+  // const userId = 
+  // update later for email (?):
   const name = req.body.username;
-  res.cookie("username", name);
+  res.cookie("user_id", name);
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 
