@@ -1,8 +1,11 @@
 const express = require("express");
 const cookieParser = require('cookie-parser');
+const bcrypt = require("bcryptjs");
 const app = express();
 app.use(cookieParser());
+
 const PORT = 8080; // default port 8080
+const SALT = 10;
 
 // const urlDatabase = {
 //   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -125,13 +128,17 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const salt = bcrypt.genSaltSync(SALT);
+  const hashedPassword = bcrypt.hashSync(password, salt);
+
   if (!email || !password) {
     res.status(400).send("Please enter a valid email and password.");
   } else if (getUserByEmail(email, users)) {
     res.status(400).send("It looks like an account with this email address already exists!");
   } else {
     const userRandomID = generateRandomString();
-    users[userRandomID] = { id: userRandomID, email: email, password: password };
+    users[userRandomID] = { id: userRandomID, email: email, password: hashedPassword };
+    console.log(users[userRandomID])
     res.cookie("user_id", userRandomID);
     // console.log(users[userRandomID]);
     res.redirect("/urls");
@@ -203,19 +210,18 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  let userId;
+  const user = getUserByEmail(email, users);
 
   if (!getUserByEmail(email, users)) {
     res.status(403).send("Sorry, we couldn't find an account associated with this email address.");
   } else {
-    const user = getUserByEmail(email, users);
-    userId = user.id;
-    if (password !== user.password) {
+    const pwdsMatch = bcrypt.compareSync(password, user.password);
+    if (!pwdsMatch) {
       res.status(403).send("Incorrect password: the password entered does not match our records.");
     }
   }
 
-  res.cookie("user_id", userId);
+  res.cookie("user_id", user.id);
   res.redirect("/urls");
 });
 
