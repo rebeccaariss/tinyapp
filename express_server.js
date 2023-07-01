@@ -21,6 +21,16 @@ const urlDatabase = {
 
 const users = {};
 
+const urlsForUser = function(id) {
+  const urls = {};
+  for (const tinyURL in urlDatabase) {
+    if (urlDatabase[tinyURL].userID === id) {
+      urls[tinyURL] = urlDatabase[tinyURL];
+    }
+  }
+  return urls;
+};
+
 // generateRandomString function implemented based on
 // https://www.programiz.com/javascript/examples/generate-random-strings#:~
 // :text=random()%20method%20is%20used,a%20random%20character%20is%20generated.
@@ -49,10 +59,15 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, user: users[req.cookies.user_id]};
-  // console.log(req.cookies.user_id);
-  // console.log(templateVars);
-  res.render("urls_index", templateVars);
+  const userId = req.cookies.user_id;
+  if (!userId) {
+    res.redirect(401, "/login");
+  } else {
+    const templateVars = { urls: urlsForUser(req.cookies.user_id), user: users[req.cookies.user_id]};
+    // console.log(req.cookies.user_id);
+    // console.log(templateVars);
+    res.render("urls_index", templateVars);
+  }
 });
 
 app.post("/urls", (req, res) => {
@@ -82,9 +97,14 @@ app.get("/urls/new", (req, res) => {
 
 // this is the page with the card containing long URL and short URL link (and edit option)
 app.get("/urls/:id", (req, res) => {
+  const userId = req.cookies.user_id;
   if (urlDatabase[req.params.id]) {
-    const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.cookies.user_id] };
-    res.render("urls_show", templateVars);
+    if (userId && userId === urlDatabase[req.params.id].userID) {
+      const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.cookies.user_id] };
+      res.render("urls_show", templateVars);
+    } else {
+      res.status(401).send("Sorry, you must be logged in to access this page.");
+    }
   } else {
     res.status(404).send("Sorry, we couldn't find the page you're looking for.");
   }
