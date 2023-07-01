@@ -147,13 +147,27 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
-  res.redirect("/urls");
+  const userId = req.cookies.user_id;
+  if (!urlDatabase[req.params.id]) {
+    res.status(404).send("Sorry, this URL does not exist in our database.");
+  } else if (userId === urlDatabase[req.params.id].userID) {
+    delete urlDatabase[req.params.id];
+    res.redirect("/urls");
+  } else {
+    res.status(401).send("Sorry, you must be logged in to perform this action.");
+  }
 });
 
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id].longURL = req.body.longURL;
-  res.redirect("/urls");
+  const userId = req.cookies.user_id;
+  if (!urlDatabase[req.params.id]) {
+    res.status(404).send("Sorry, this URL does not exist in our database.");
+  } else if (userId === urlDatabase[req.params.id].userID) {
+    urlDatabase[req.params.id].longURL = req.body.longURL;
+    res.redirect("/urls");
+  } else {
+    res.status(401).send("Sorry, you must be logged in to perform this action.");
+  }
 });
 
 app.post("/urls/:id/edit", (req, res) => {
