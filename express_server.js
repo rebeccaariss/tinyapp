@@ -99,11 +99,13 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const userId = req.cookies.user_id;
   if (urlDatabase[req.params.id]) {
-    if (userId && userId === urlDatabase[req.params.id].userID) {
+    if (userId === urlDatabase[req.params.id].userID) {
       const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.cookies.user_id] };
       res.render("urls_show", templateVars);
-    } else {
-      res.status(401).send("Sorry, you must be logged in to access this page.");
+    } else if (!userId) {
+      res.status(401).send("Sorry, you must be logged in to perform this action.");
+    } else if (userId !== urlDatabase[req.params.id].userID) {
+      res.status(403).send("Sorry, you do not have permission to access this page.");
     }
   } else {
     res.status(404).send("Sorry, we couldn't find the page you're looking for.");
@@ -146,27 +148,41 @@ app.get("/u/:id", (req, res) => {
   }
 });
 
+// for deleting an existing URL:
 app.post("/urls/:id/delete", (req, res) => {
   const userId = req.cookies.user_id;
+  // if the URL doesn't exist in the database at all:
   if (!urlDatabase[req.params.id]) {
     res.status(404).send("Sorry, this URL does not exist in our database.");
+  // if the appropriate user is logged in:
   } else if (userId === urlDatabase[req.params.id].userID) {
     delete urlDatabase[req.params.id];
     res.redirect("/urls");
-  } else {
+  // if user is not logged in at all:
+  } else if (!userId) {
     res.status(401).send("Sorry, you must be logged in to perform this action.");
+  // if someone is logged in, but they do not own the URL:
+  } else if (userId !== urlDatabase[req.params.id].userID) {
+    res.status(403).send("Sorry, you do not have permission to delete this URL.");
   }
 });
 
+// for updating existing URL:
 app.post("/urls/:id", (req, res) => {
   const userId = req.cookies.user_id;
+  // if the URL doesn't exist in the database at all:
   if (!urlDatabase[req.params.id]) {
     res.status(404).send("Sorry, this URL does not exist in our database.");
+  // if the appropriate user is logged in:
   } else if (userId === urlDatabase[req.params.id].userID) {
     urlDatabase[req.params.id].longURL = req.body.longURL;
     res.redirect("/urls");
-  } else {
+  // if user is not logged in at all:
+  } else if (!userId) {
     res.status(401).send("Sorry, you must be logged in to perform this action.");
+  // if someone is logged in, but they do not own the URL:
+  } else if (userId !== urlDatabase[req.params.id].userID) {
+    res.status(403).send("Sorry, you do not have permission to edit this URL.");
   }
 });
 
