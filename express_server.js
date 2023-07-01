@@ -4,9 +4,19 @@ const app = express();
 app.use(cookieParser());
 const PORT = 8080; // default port 8080
 
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 const users = {};
@@ -52,7 +62,10 @@ app.post("/urls", (req, res) => {
   } else {
     console.log(req.body); // Log the POST request body to the console
     const tinyURL = generateRandomString();
-    urlDatabase[tinyURL] = req.body.longURL;
+    urlDatabase[tinyURL] = {
+      longURL: req.body.longURL,
+      userID: userId
+    };
     res.redirect(`/urls/${tinyURL}`);
   }
 });
@@ -70,7 +83,7 @@ app.get("/urls/new", (req, res) => {
 // this is the page with the card containing long URL and short URL link (and edit option)
 app.get("/urls/:id", (req, res) => {
   if (urlDatabase[req.params.id]) {
-    const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: users[req.cookies.user_id] };
+    const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.cookies.user_id] };
     res.render("urls_show", templateVars);
   } else {
     res.status(404).send("Sorry, we couldn't find the page you're looking for.");
@@ -106,7 +119,7 @@ app.post("/register", (req, res) => {
 // this takes the user to the corresponding long URL
 app.get("/u/:id", (req, res) => {
   if (urlDatabase[req.params.id]) {
-    const longURL = urlDatabase[req.params.id];
+    const longURL = urlDatabase[req.params.id].longURL;
     res.redirect(longURL);
   } else {
     res.status(404).send("Sorry, we couldn't find the page you're looking for.");
@@ -119,7 +132,7 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.longURL;
+  urlDatabase[req.params.id].longURL = req.body.longURL;
   res.redirect("/urls");
 });
 
