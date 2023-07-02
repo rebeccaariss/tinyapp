@@ -6,11 +6,10 @@ Similar to applications like Bit.ly and TinyURL, TinyApp is a project submitted 
 
 ## Final Product
 
-!["screenshot description"]()
-!["screenshot description"]()
-!["screenshot description"]()
-!["screenshot description"]()
-!["screenshot description"]()
+!["Screenshot of Log In Page"](docs/log-in.png)
+!["Screenshot of My URLs Page (Index)"](docs/urls-index.png)
+!["Screenshot of Card for Specific URL"](docs/url-card.png)
+!["Screenshot of Create a New URL Page"](docs/new-url.png)
 
 ## Dependencies
 
