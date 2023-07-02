@@ -67,3 +67,19 @@ describe('urlsForUser', function() {
     assert.deepEqual(urlsActual, urlsExpected);
   });
 });
+
+describe('generateRandomString', function() {
+  it('should return 6 random alphanumeric characters in string format', function() {
+    const randomStringLength = generateRandomString().length;
+    const expectedStringLength = 6;
+
+    assert.equal(randomStringLength, expectedStringLength);
+  });
+
+  it('should always return a random string (no duplicates)', function() {
+    const randomStringOne = generateRandomString();
+    const randomStringTwo = generateRandomString();
+
+    assert.notEqual(randomStringOne, randomStringTwo);
+  });
+});
