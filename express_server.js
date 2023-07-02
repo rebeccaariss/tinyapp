@@ -17,10 +17,6 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000 // 24hours
 }));
 
-// const urlDatabase = {
-//   "b2xVn2": "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com"
-// };
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
@@ -34,39 +30,33 @@ const urlDatabase = {
 
 const users = {};
 
-// trying to access home route results in "Cannot GET" message;
+
+/**
+ * GET PAGES ----------------------------------------------------------------------------------------------------------
+ */
+
+
+// Trying to access home route results in "Cannot GET" message;
 // redirecting to /urls route to avoid confusion:
 app.get("/", (req, res) => {
   res.redirect("/urls");
 });
 
+// Display URL index page:
 app.get("/urls", (req, res) => {
   const userId = req.session.user_id;
   if (!userId) {
     res.redirect(401, "/login");
   } else {
-    const templateVars = { urls: urlsForUser(req.session.user_id, urlDatabase), user: users[req.session.user_id]};
-    // console.log(req.cookies.user_id);
-    // console.log(templateVars);
+    const templateVars = {
+      urls: urlsForUser(req.session.user_id, urlDatabase), 
+      user: users[req.session.user_id]
+    };
     res.render("urls_index", templateVars);
   }
 });
 
-app.post("/urls", (req, res) => {
-  const userId = req.session.user_id;
-  if (!userId) {
-    res.status(401).send("Sorry, only registered users can create short URLs. Please log in or create an account");
-  } else {
-    console.log(req.body); // Log the POST request body to the console
-    const tinyURL = generateRandomString();
-    urlDatabase[tinyURL] = {
-      longURL: req.body.longURL,
-      userID: userId
-    };
-    res.redirect(`/urls/${tinyURL}`);
-  }
-});
-
+// Display page for creating new URL:
 app.get("/urls/new", (req, res) => {
   const userId = req.session.user_id;
   if (!userId) {
@@ -77,12 +67,38 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
-// this is the page with the card containing long URL and short URL link (and edit option)
+// Registration page:
+app.get("/register", (req, res) => {
+  const userId = req.session.user_id;
+  if (userId) {
+    res.redirect("/urls");
+  } else {
+    const templateVars = { user: users[userId] };
+    res.render("urls_registration", templateVars);
+  }
+});
+
+// Log in page:
+app.get("/login", (req, res) => {
+  const userId = req.session.user_id;
+  if (userId) {
+    res.redirect("/urls");
+  } else {
+    const templateVars = { user: users[userId] };
+    res.render("urls_login", templateVars);
+  }
+});
+
+// Show card containing long URL and short URL link (and edit option):
 app.get("/urls/:id", (req, res) => {
   const userId = req.session.user_id;
   if (urlDatabase[req.params.id]) {
     if (userId === urlDatabase[req.params.id].userID) {
-      const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.session.user_id] };
+      const templateVars = {
+        id: req.params.id,
+        longURL: urlDatabase[req.params.id].longURL,
+        user: users[req.session.user_id]
+      };
       res.render("urls_show", templateVars);
     } else if (!userId) {
       res.status(401).send("Sorry, you must be logged in to perform this action.");
@@ -94,16 +110,23 @@ app.get("/urls/:id", (req, res) => {
   }
 });
 
-app.get("/register", (req, res) => {
-  const userId = req.session.user_id;
-  if (userId) {
-    res.redirect("/urls");
+// On short URL click, redirect user to the corresponding long URL:
+app.get("/u/:id", (req, res) => {
+  if (urlDatabase[req.params.id]) {
+    const longURL = urlDatabase[req.params.id].longURL;
+    res.redirect(longURL);
   } else {
-    const templateVars = { user: users[userId] };
-    res.render("urls_registration", templateVars);
+    res.status(404).send("Sorry, we couldn't find the page you're looking for.");
   }
 });
 
+
+/**
+ * POST ROUTES ----------------------------------------------------------------------------------------------------------
+ */
+
+
+// Register (create) new user (action):
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -116,75 +139,17 @@ app.post("/register", (req, res) => {
     res.status(400).send("It looks like an account with this email address already exists!");
   } else {
     const userRandomID = generateRandomString();
-    users[userRandomID] = { id: userRandomID, email: email, password: hashedPassword };
+    users[userRandomID] = {
+      id: userRandomID,
+      email: email,
+      password: hashedPassword
+    };
     req.session.user_id = userRandomID;
-    // console.log(users[userRandomID]);
     res.redirect("/urls");
   }
 });
 
-// this takes the user to the corresponding long URL
-app.get("/u/:id", (req, res) => {
-  if (urlDatabase[req.params.id]) {
-    const longURL = urlDatabase[req.params.id].longURL;
-    res.redirect(longURL);
-  } else {
-    res.status(404).send("Sorry, we couldn't find the page you're looking for.");
-  }
-});
-
-// for deleting an existing URL:
-app.post("/urls/:id/delete", (req, res) => {
-  const userId = req.session.user_id;
-  // if the URL doesn't exist in the database at all:
-  if (!urlDatabase[req.params.id]) {
-    res.status(404).send("Sorry, this URL does not exist in our database.");
-  // if the appropriate user is logged in:
-  } else if (userId === urlDatabase[req.params.id].userID) {
-    delete urlDatabase[req.params.id];
-    res.redirect("/urls");
-  // if user is not logged in at all:
-  } else if (!userId) {
-    res.status(401).send("Sorry, you must be logged in to perform this action.");
-  // if someone is logged in, but they do not own the URL:
-  } else if (userId !== urlDatabase[req.params.id].userID) {
-    res.status(403).send("Sorry, you do not have permission to delete this URL.");
-  }
-});
-
-// for updating existing URL:
-app.post("/urls/:id", (req, res) => {
-  const userId = req.session.user_id;
-  // if the URL doesn't exist in the database at all:
-  if (!urlDatabase[req.params.id]) {
-    res.status(404).send("Sorry, this URL does not exist in our database.");
-  // if the appropriate user is logged in:
-  } else if (userId === urlDatabase[req.params.id].userID) {
-    urlDatabase[req.params.id].longURL = req.body.longURL;
-    res.redirect("/urls");
-  // if user is not logged in at all:
-  } else if (!userId) {
-    res.status(401).send("Sorry, you must be logged in to perform this action.");
-  // if someone is logged in, but they do not own the URL:
-  } else if (userId !== urlDatabase[req.params.id].userID) {
-    res.status(403).send("Sorry, you do not have permission to edit this URL.");
-  }
-});
-
-app.post("/urls/:id/edit", (req, res) => {
-  res.redirect(`/urls/${req.params.id}`);
-});
-
-app.get("/login", (req, res) => {
-  const userId = req.session.user_id;
-  if (userId) {
-    res.redirect("/urls");
-  } else {
-    const templateVars = { user: users[userId] };
-    res.render("urls_login", templateVars);
-  }
-});
-
+// Log in (action):
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -203,9 +168,68 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
+// Log out (action):
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/login");
+});
+
+// Add a new URL to the index:
+app.post("/urls", (req, res) => {
+  const userId = req.session.user_id;
+  if (!userId) {
+    res.status(401).send("Sorry, only registered users can create short URLs. Please log in or create an account");
+  } else {
+    const tinyURL = generateRandomString();
+    urlDatabase[tinyURL] = {
+      longURL: req.body.longURL,
+      userID: userId
+    };
+    res.redirect(`/urls/${tinyURL}`);
+  }
+});
+
+// Edit URL:
+app.post("/urls/:id/edit", (req, res) => {
+  res.redirect(`/urls/${req.params.id}`);
+});
+
+// Update an existing URL (action):
+app.post("/urls/:id", (req, res) => {
+  const userId = req.session.user_id;
+  // if the URL doesn't exist in the database at all:
+  if (!urlDatabase[req.params.id]) {
+    res.status(404).send("Sorry, this URL does not exist in our database.");
+  // if the appropriate user is logged in:
+  } else if (userId === urlDatabase[req.params.id].userID) {
+    urlDatabase[req.params.id].longURL = req.body.longURL;
+    res.redirect("/urls");
+  // if user is not logged in at all:
+  } else if (!userId) {
+    res.status(401).send("Sorry, you must be logged in to perform this action.");
+  // if someone is logged in, but they do not own the URL:
+  } else if (userId !== urlDatabase[req.params.id].userID) {
+    res.status(403).send("Sorry, you do not have permission to edit this URL.");
+  }
+});
+
+// Delete an existing URL:
+app.post("/urls/:id/delete", (req, res) => {
+  const userId = req.session.user_id;
+  // if the URL doesn't exist in the database at all:
+  if (!urlDatabase[req.params.id]) {
+    res.status(404).send("Sorry, this URL does not exist in our database.");
+  // if the appropriate user is logged in:
+  } else if (userId === urlDatabase[req.params.id].userID) {
+    delete urlDatabase[req.params.id];
+    res.redirect("/urls");
+  // if user is not logged in at all:
+  } else if (!userId) {
+    res.status(401).send("Sorry, you must be logged in to perform this action.");
+  // if someone is logged in, but they do not own the URL:
+  } else if (userId !== urlDatabase[req.params.id].userID) {
+    res.status(403).send("Sorry, you do not have permission to delete this URL.");
+  }
 });
 
 app.listen(PORT, () => {

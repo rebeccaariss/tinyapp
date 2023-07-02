@@ -1,3 +1,4 @@
+// Returns a user object (containing user data) by email lookup:
 const getUserByEmail = function(email, users) {
   let userObj;
   // we don't need to know the user_id to access values here:
@@ -9,6 +10,8 @@ const getUserByEmail = function(email, users) {
   return userObj;
 };
 
+// Returns object containing short URLs & their corresponding long URLS
+// associated with a given user:
 const urlsForUser = function(id, urlDatabase) {
   const urls = {};
   for (const tinyURL in urlDatabase) {
@@ -18,6 +21,8 @@ const urlsForUser = function(id, urlDatabase) {
   }
   return urls;
 };
+
+// Returns a random alphanumeric string with 6 characters:
 
 // generateRandomString function implemented based on
 // https://www.programiz.com/javascript/examples/generate-random-strings#:~
