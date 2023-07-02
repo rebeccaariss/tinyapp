@@ -1,11 +1,31 @@
 const express = require("express");
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
 const app = express();
-app.use(cookieParser());
 
 const PORT = 8080; // default port 8080
 const SALT = 10;
+
+// generateRandomString function implemented based on
+// https://www.programiz.com/javascript/examples/generate-random-strings#:~
+// :text=random()%20method%20is%20used,a%20random%20character%20is%20generated.
+const generateRandomString = function() {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let randomString = "";
+  for (let i = 0; i < 6; i++) {
+    randomString += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return randomString;
+};
+
+app.set("view engine", "ejs");
+// Middleware for parsing POST request body to make it human-readable:
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieSession({
+  name: "session",
+  keys: [generateRandomString()],
+  maxAge: 24 * 60 * 60 * 1000 // 24hours
+}));
 
 // const urlDatabase = {
 //   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -34,18 +54,6 @@ const urlsForUser = function(id) {
   return urls;
 };
 
-// generateRandomString function implemented based on
-// https://www.programiz.com/javascript/examples/generate-random-strings#:~
-// :text=random()%20method%20is%20used,a%20random%20character%20is%20generated.
-const generateRandomString = function() {
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let randomString = "";
-  for (let i = 0; i < 6; i++) {
-    randomString += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return randomString;
-};
-
 const getUserByEmail = function(email, users) {
   let userObj;
   // we don't need to know the user_id to access values here:
@@ -57,16 +65,18 @@ const getUserByEmail = function(email, users) {
   return userObj;
 };
 
-app.set("view engine", "ejs");
-// Middleware for parsing POST request body to make it human-readable:
-app.use(express.urlencoded({ extended: true }));
+// trying to access home route results in "Cannot GET" message;
+// redirecting to /urls route to avoid confusion:
+app.get("/", (req, res) => {
+  res.redirect("/urls");
+});
 
 app.get("/urls", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   if (!userId) {
     res.redirect(401, "/login");
   } else {
-    const templateVars = { urls: urlsForUser(req.cookies.user_id), user: users[req.cookies.user_id]};
+    const templateVars = { urls: urlsForUser(req.session.user_id), user: users[req.session.user_id]};
     // console.log(req.cookies.user_id);
     // console.log(templateVars);
     res.render("urls_index", templateVars);
@@ -74,7 +84,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   if (!userId) {
     res.status(401).send("Sorry, only registered users can create short URLs. Please log in or create an account");
   } else {
@@ -89,7 +99,7 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   if (!userId) {
     res.redirect("/login");
   } else {
@@ -100,10 +110,10 @@ app.get("/urls/new", (req, res) => {
 
 // this is the page with the card containing long URL and short URL link (and edit option)
 app.get("/urls/:id", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   if (urlDatabase[req.params.id]) {
     if (userId === urlDatabase[req.params.id].userID) {
-      const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.cookies.user_id] };
+      const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.session.user_id] };
       res.render("urls_show", templateVars);
     } else if (!userId) {
       res.status(401).send("Sorry, you must be logged in to perform this action.");
@@ -116,7 +126,7 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   if (userId) {
     res.redirect("/urls");
   } else {
@@ -138,8 +148,7 @@ app.post("/register", (req, res) => {
   } else {
     const userRandomID = generateRandomString();
     users[userRandomID] = { id: userRandomID, email: email, password: hashedPassword };
-    console.log(users[userRandomID])
-    res.cookie("user_id", userRandomID);
+    req.session.user_id = userRandomID;
     // console.log(users[userRandomID]);
     res.redirect("/urls");
   }
@@ -157,7 +166,7 @@ app.get("/u/:id", (req, res) => {
 
 // for deleting an existing URL:
 app.post("/urls/:id/delete", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   // if the URL doesn't exist in the database at all:
   if (!urlDatabase[req.params.id]) {
     res.status(404).send("Sorry, this URL does not exist in our database.");
@@ -176,7 +185,7 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // for updating existing URL:
 app.post("/urls/:id", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   // if the URL doesn't exist in the database at all:
   if (!urlDatabase[req.params.id]) {
     res.status(404).send("Sorry, this URL does not exist in our database.");
@@ -198,7 +207,7 @@ app.post("/urls/:id/edit", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   if (userId) {
     res.redirect("/urls");
   } else {
@@ -221,19 +230,13 @@ app.post("/login", (req, res) => {
     }
   }
 
-  res.cookie("user_id", user.id);
+  req.session.user_id = user.id;
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  req.session = null;
   res.redirect("/login");
-});
-
-// trying to access home route results in "Cannot GET" message;
-// redirecting to /urls route to avoid confusion:
-app.get("/", (req, res) => {
-  res.redirect("/urls");
 });
 
 app.listen(PORT, () => {
