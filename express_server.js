@@ -6,19 +6,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 const SALT = 10;
 
-const getUserByEmail = require("./helpers.js");
-
-// generateRandomString function implemented based on
-// https://www.programiz.com/javascript/examples/generate-random-strings#:~
-// :text=random()%20method%20is%20used,a%20random%20character%20is%20generated.
-const generateRandomString = function() {
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let randomString = "";
-  for (let i = 0; i < 6; i++) {
-    randomString += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return randomString;
-};
+const { getUserByEmail, urlsForUser, generateRandomString } = require("./helpers.js");
 
 app.set("view engine", "ejs");
 // Middleware for parsing POST request body to make it human-readable:
@@ -46,16 +34,6 @@ const urlDatabase = {
 
 const users = {};
 
-const urlsForUser = function(id) {
-  const urls = {};
-  for (const tinyURL in urlDatabase) {
-    if (urlDatabase[tinyURL].userID === id) {
-      urls[tinyURL] = urlDatabase[tinyURL];
-    }
-  }
-  return urls;
-};
-
 // trying to access home route results in "Cannot GET" message;
 // redirecting to /urls route to avoid confusion:
 app.get("/", (req, res) => {
@@ -67,7 +45,7 @@ app.get("/urls", (req, res) => {
   if (!userId) {
     res.redirect(401, "/login");
   } else {
-    const templateVars = { urls: urlsForUser(req.session.user_id), user: users[req.session.user_id]};
+    const templateVars = { urls: urlsForUser(req.session.user_id, urlDatabase), user: users[req.session.user_id]};
     // console.log(req.cookies.user_id);
     // console.log(templateVars);
     res.render("urls_index", templateVars);
