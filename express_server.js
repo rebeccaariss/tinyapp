@@ -6,6 +6,8 @@ const app = express();
 const PORT = 8080; // default port 8080
 const SALT = 10;
 
+const getUserByEmail = require("./helpers.js");
+
 // generateRandomString function implemented based on
 // https://www.programiz.com/javascript/examples/generate-random-strings#:~
 // :text=random()%20method%20is%20used,a%20random%20character%20is%20generated.
@@ -52,17 +54,6 @@ const urlsForUser = function(id) {
     }
   }
   return urls;
-};
-
-const getUserByEmail = function(email, users) {
-  let userObj;
-  // we don't need to know the user_id to access values here:
-  for (const id in users) {
-    if (users[id].email === email) {
-      userObj = users[id];
-    }
-  }
-  return userObj;
 };
 
 // trying to access home route results in "Cannot GET" message;
